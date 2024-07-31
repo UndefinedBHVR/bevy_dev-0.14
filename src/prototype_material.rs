@@ -174,6 +174,7 @@ pub struct PrototypeMaterialMeshBundle {
     pub mesh: Handle<Mesh>,
     /// Describe the feature that this prototype material is for, e.g. `floor` or `wall`. It is used to generate a random color that is the same every time the program is run.
     pub material: &'static str,
+    pub program_specific: bool,
     pub transform: Transform,
     pub global_transform: GlobalTransform,
     /// User indication of whether an entity is visible
@@ -227,7 +228,11 @@ impl bevy::ecs::bundle::DynamicBundle for PrototypeMaterialMeshBundle {
         func: &mut impl FnMut(bevy::ecs::component::StorageType, bevy::ecs::ptr::OwningPtr<'_>),
     ) {
         self.mesh.get_components(&mut *func);
-        PrototypeMaterial::new(self.material).get_components(&mut *func);
+        if true == self.program_specific {
+            PrototypeMaterial::new_with_exe_name(self.material).get_components(&mut *func);
+        } else {
+            PrototypeMaterial::new(self.material).get_components(&mut *func);
+        }
         self.transform.get_components(&mut *func);
         self.global_transform.get_components(&mut *func);
         self.visibility.get_components(&mut *func);
