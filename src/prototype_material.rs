@@ -65,7 +65,7 @@ impl PrototypeMaterial {
 #[derive(Asset, AsBindGroup, TypePath, Debug, Clone)]
 pub struct PrototypeMaterialAsset {
     #[uniform(0)]
-    color: Color,
+    color: LinearRgba,
     #[texture(1)]
     #[sampler(2)]
     base_texture: Handle<Image>,
@@ -116,7 +116,7 @@ fn initialization(
         );
 
         shaders.insert(
-            SHADER_HANDLE,
+            &SHADER_HANDLE,
             Shader::from_wgsl(
                 String::from_utf8(
                     DevAssets::get(SHADER_PATH)
@@ -134,7 +134,7 @@ fn initialization(
         commands
             .entity(entity)
             .insert(materials.add(PrototypeMaterialAsset {
-                color: material.color,
+                color: material.color.into(),
                 base_texture: resource.base_texture.clone().unwrap(),
             }));
     }
@@ -184,6 +184,10 @@ unsafe impl bevy::ecs::bundle::Bundle for PrototypeMaterialMeshBundle {
         __F: FnMut(&mut __T) -> bevy::ecs::ptr::OwningPtr<'_>,
     {
         panic!("PrototypeMaterialMeshBundle cannot be constructed from components because it contains a non-component field: `material`")
+    }
+    
+    fn get_component_ids(components: &bevy::ecs::component::Components, ids: &mut impl FnMut(Option<bevy::ecs::component::ComponentId>)) {
+        todo!()
     }
 }
 
