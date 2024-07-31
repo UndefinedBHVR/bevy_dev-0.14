@@ -2,7 +2,7 @@
 
 use std::{
     collections::hash_map::DefaultHasher,
-    hash::{Hash, Hasher}, path::Path,
+    hash::{Hash, Hasher},
     ffi::OsStr
 };
 
@@ -36,6 +36,32 @@ impl Plugin for PrototypeMaterialPlugin {
     }
 }
 
+#[derive(Clone, Debug, PartialEq)]
+pub enum PrototypeMaterialType {
+    Default(&'static str),
+    Color(Color),
+    ProgramSpecific(&'static str),
+}
+
+impl PrototypeMaterialType {
+    pub fn new(feature_name: &'static str) -> Self {
+        PrototypeMaterialType::Default(feature_name)
+    }
+    pub fn color(color: Color) -> Self {
+        PrototypeMaterialType::Color(color)
+    }
+
+    pub fn program_specific(feature_name: &'static str) -> Self {
+        PrototypeMaterialType::ProgramSpecific(feature_name)
+    }
+}
+
+impl Default for PrototypeMaterialType {
+    fn default() -> Self {
+        PrototypeMaterialType::Color(Srgba::gray(0.77).into())
+    }
+}
+
 /// Component which includes [`PrototypeMaterialAsset`] to [`Entity`] in the next [`PostUpdate`].
 #[derive(Component, Debug, Clone, Copy)]
 pub struct PrototypeMaterial {
@@ -46,43 +72,51 @@ impl PrototypeMaterial {
     /// Creates a prototype material with procedural color.
     /// # Arguments
     /// * `feature_name` - Describe the feature that this prototype material is for, e.g. `floor` or `wall`. It is used to generate a procedural color that is the same every time the program is run.
-    pub fn new(feature_name: &str) -> Self {
-        let mut hasher = DefaultHasher::new();
-        feature_name.hash(&mut hasher);
-        let hash = hasher.finish();
-
-        let rgb = RandomColor::new()
-            .luminosity(Luminosity::Bright)
-            .seed(hash)
-            .to_rgb_array();
-
-        Self {
-            color: Color::srgb_u8(rgb[0], rgb[1], rgb[2]),
+    pub fn new(kind: PrototypeMaterialType) -> Self {
+        match kind {
+            PrototypeMaterialType::Default(feature_name) => Self::new_with_feature_name(feature_name),
+            PrototypeMaterialType::Color(color) => Self::new_with_color(color),
+            PrototypeMaterialType::ProgramSpecific(feature_name) => Self::new_with_exe_name(feature_name),
         }
     }
 
-    pub fn new_with_exe_name(feature_name: &str) -> Self {
+    fn new_with_feature_name(feature_name: &str) -> Self {
+        let hash = Self::calculate_hash(feature_name, None);
+        Self::new_with_hash(hash)
+    }
+
+    fn new_with_exe_name(feature_name: &str) -> Self {
         let app_name = std::env::current_exe()
             .ok()
             .and_then(|path| {
                 path.file_name()
                     .and_then(OsStr::to_str)
                     .map(|name| name.to_string())
-            }
-        );
-    
+            });
+
+        let hash = Self::calculate_hash(feature_name, app_name.as_deref());
+        Self::new_with_hash(hash)
+    }
+
+    fn new_with_color(color: Color) -> Self {
+        Self { color }
+    }
+
+    fn calculate_hash(feature_name: &str, app_name: Option<&str>) -> u64 {
         let mut hasher = DefaultHasher::new();
         feature_name.hash(&mut hasher);
         if let Some(name) = app_name {
             name.hash(&mut hasher);
         }
-        let hash = hasher.finish();
-    
+        hasher.finish()
+    }
+
+    fn new_with_hash(hash: u64) -> Self {
         let rgb = RandomColor::new()
             .luminosity(Luminosity::Bright)
             .seed(hash)
             .to_rgb_array();
-    
+
         Self {
             color: Color::srgb_u8(rgb[0], rgb[1], rgb[2]),
         }
@@ -173,7 +207,7 @@ fn initialization(
 pub struct PrototypeMaterialMeshBundle {
     pub mesh: Handle<Mesh>,
     /// Describe the feature that this prototype material is for, e.g. `floor` or `wall`. It is used to generate a random color that is the same every time the program is run.
-    pub material: &'static str,
+    pub material: PrototypeMaterialType,
     pub program_specific: bool,
     pub transform: Transform,
     pub global_transform: GlobalTransform,
@@ -215,8 +249,8 @@ unsafe impl bevy::ecs::bundle::Bundle for PrototypeMaterialMeshBundle {
         panic!("PrototypeMaterialMeshBundle cannot be constructed from components because it contains a non-component field: `material`")
     }
     
-    fn get_component_ids(components: &bevy::ecs::component::Components, ids: &mut impl FnMut(Option<bevy::ecs::component::ComponentId>)) {
-        todo!()
+    fn get_component_ids(_: &bevy::ecs::component::Components, _: &mut impl FnMut(Option<bevy::ecs::component::ComponentId>)) {
+        panic!("Unsupported operation: PrototypeMaterialMeshBundle::get_component_ids")
     }
 }
 
@@ -228,11 +262,7 @@ impl bevy::ecs::bundle::DynamicBundle for PrototypeMaterialMeshBundle {
         func: &mut impl FnMut(bevy::ecs::component::StorageType, bevy::ecs::ptr::OwningPtr<'_>),
     ) {
         self.mesh.get_components(&mut *func);
-        if true == self.program_specific {
-            PrototypeMaterial::new_with_exe_name(self.material).get_components(&mut *func);
-        } else {
-            PrototypeMaterial::new(self.material).get_components(&mut *func);
-        }
+        PrototypeMaterial::new(self.material).get_components(&mut *func);
         self.transform.get_components(&mut *func);
         self.global_transform.get_components(&mut *func);
         self.visibility.get_components(&mut *func);

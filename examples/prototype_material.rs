@@ -14,14 +14,14 @@ fn main() {
 fn setup(mut commands: Commands, mut meshes: ResMut<Assets<Mesh>>) {
     commands.spawn(PrototypeMaterialMeshBundle {
         mesh: meshes.add(Cuboid::new(50.0, 2.0, 50.0)),
-        material: "floor",
+        material: PrototypeMaterialType::new("floor"),
         ..default()
     });
 
     commands.spawn(PrototypeMaterialMeshBundle {
         transform: Transform::from_xyz(-1.0, 1.0, -0.5),
         mesh: meshes.add(Cuboid::new(4.0, 2.0, 1.0)),
-        material: "wall",
+        material: PrototypeMaterialType::new("wall"),
         ..default()
     });
 
