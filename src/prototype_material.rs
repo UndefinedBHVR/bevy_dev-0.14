@@ -71,7 +71,7 @@ pub struct PrototypeLuminosity {
 impl Default for PrototypeLuminosity {
     fn default() -> Self {
         PrototypeLuminosity {
-            luminosity: Luminosity::Light,
+            luminosity: Luminosity::Bright,
         }
     }
 }
@@ -88,9 +88,9 @@ impl PrototypeMaterial {
     /// * `feature_name` - Describe the feature that this prototype material is for, e.g. `floor` or `wall`. It is used to generate a procedural color that is the same every time the program is run.
     pub fn new(kind: PrototypeMaterialType) -> Self {
         match kind {
-            PrototypeMaterialType::Default(feature_name) => Self::new_with_feature_name(feature_name, Luminosity::Light),
+            PrototypeMaterialType::Default(feature_name) => Self::new_with_feature_name(feature_name, Luminosity::Bright),
             PrototypeMaterialType::Color(color) => Self::new_with_color(color),
-            PrototypeMaterialType::ProgramSpecific(feature_name) => Self::new_with_exe_name(feature_name, Luminosity::Light),
+            PrototypeMaterialType::ProgramSpecific(feature_name) => Self::new_with_exe_name(feature_name, Luminosity::Bright),
         }
     }
 
