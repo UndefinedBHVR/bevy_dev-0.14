@@ -2,7 +2,8 @@
 
 use std::{
     collections::hash_map::DefaultHasher,
-    hash::{Hash, Hasher},
+    hash::{Hash, Hasher}, path::Path,
+    ffi::OsStr
 };
 
 use bevy::{
@@ -56,7 +57,34 @@ impl PrototypeMaterial {
             .to_rgb_array();
 
         Self {
-            color: Color::rgb_u8(rgb[0], rgb[1], rgb[2]),
+            color: Color::srgb_u8(rgb[0], rgb[1], rgb[2]),
+        }
+    }
+
+    pub fn new_with_exe_name(feature_name: &str) -> Self {
+        let app_name = std::env::current_exe()
+            .ok()
+            .and_then(|path| {
+                path.file_name()
+                    .and_then(OsStr::to_str)
+                    .map(|name| name.to_string())
+            }
+        );
+    
+        let mut hasher = DefaultHasher::new();
+        feature_name.hash(&mut hasher);
+        if let Some(name) = app_name {
+            name.hash(&mut hasher);
+        }
+        let hash = hasher.finish();
+    
+        let rgb = RandomColor::new()
+            .luminosity(Luminosity::Bright)
+            .seed(hash)
+            .to_rgb_array();
+    
+        Self {
+            color: Color::srgb_u8(rgb[0], rgb[1], rgb[2]),
         }
     }
 }
