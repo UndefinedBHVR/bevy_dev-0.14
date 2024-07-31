@@ -208,7 +208,6 @@ pub struct PrototypeMaterialMeshBundle {
     pub mesh: Handle<Mesh>,
     /// Describe the feature that this prototype material is for, e.g. `floor` or `wall`. It is used to generate a random color that is the same every time the program is run.
     pub material: PrototypeMaterialType,
-    pub program_specific: bool,
     pub transform: Transform,
     pub global_transform: GlobalTransform,
     /// User indication of whether an entity is visible
