@@ -58,7 +58,7 @@ impl PrototypeMaterialType {
 
 impl Default for PrototypeMaterialType {
     fn default() -> Self {
-        PrototypeMaterialType::Color(Srgba::gray(0.35).into())
+        PrototypeMaterialType::Color(Srgba::gray(0.45).into())
     }
 }
 
