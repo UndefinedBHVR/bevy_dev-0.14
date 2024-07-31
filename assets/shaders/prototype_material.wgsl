@@ -32,7 +32,7 @@ fn extract_scale(model_matrix: mat4x4f) -> vec3f {
 fn vertex(vertex: Vertex) -> VertexOutput {
     var out: VertexOutput;
 
-    let model_matrix = get_model_matrix(vertex.instance_index);
+    let model_matrix = get_world_from_local(vertex.instance_index);
     out.position = mesh_position_local_to_clip(model_matrix, vec4f(vertex.position, 1.0));
     out.scaled_local_position = vertex.position * extract_scale(model_matrix);
     out.local_normal = vertex.normal;
