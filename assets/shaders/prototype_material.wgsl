@@ -116,7 +116,7 @@ fn fragment(in: VertexOutput, @builtin(front_facing) is_front: bool) -> @locatio
     pbr_input.world_position = in.world_position;
     pbr_input.frag_coord = in.position;
     pbr_input.flags = mesh[in.instance_index].flags;
-    pbr_input.is_orthographic = view.projection[3].w == 1.0;
+    pbr_input.is_orthographic = view.clip_from_view[3].w == 1.0;
     pbr_input.V = calculate_view(in.world_position, pbr_input.is_orthographic);
     pbr_input.world_normal = prepare_world_normal(in.world_normal, false, is_front);
     pbr_input.N = normalize(pbr_input.world_normal);
