@@ -58,7 +58,21 @@ impl PrototypeMaterialType {
 
 impl Default for PrototypeMaterialType {
     fn default() -> Self {
-        PrototypeMaterialType::Color(Srgba::gray(0.77).into())
+        PrototypeMaterialType::Color(Srgba::gray(0.35).into())
+    }
+}
+
+#[derive(Clone, Debug, PartialEq)]
+
+pub struct PrototypeLuminosity {
+    pub luminosity: Luminosity,
+}
+
+impl Default for PrototypeLuminosity {
+    fn default() -> Self {
+        PrototypeLuminosity {
+            luminosity: Luminosity::Light,
+        }
     }
 }
 
@@ -74,18 +88,26 @@ impl PrototypeMaterial {
     /// * `feature_name` - Describe the feature that this prototype material is for, e.g. `floor` or `wall`. It is used to generate a procedural color that is the same every time the program is run.
     pub fn new(kind: PrototypeMaterialType) -> Self {
         match kind {
-            PrototypeMaterialType::Default(feature_name) => Self::new_with_feature_name(feature_name),
+            PrototypeMaterialType::Default(feature_name) => Self::new_with_feature_name(feature_name, Luminosity::Light),
             PrototypeMaterialType::Color(color) => Self::new_with_color(color),
-            PrototypeMaterialType::ProgramSpecific(feature_name) => Self::new_with_exe_name(feature_name),
+            PrototypeMaterialType::ProgramSpecific(feature_name) => Self::new_with_exe_name(feature_name, Luminosity::Light),
         }
     }
 
-    fn new_with_feature_name(feature_name: &str) -> Self {
-        let hash = Self::calculate_hash(feature_name, None);
-        Self::new_with_hash(hash)
+    pub fn new_with_luminosity(kind: PrototypeMaterialType, lumunosity: Luminosity) -> Self {
+        match kind {
+            PrototypeMaterialType::Default(feature_name) => Self::new_with_feature_name(feature_name, lumunosity),
+            PrototypeMaterialType::Color(color) => Self::new_with_color(color),
+            PrototypeMaterialType::ProgramSpecific(feature_name) => Self::new_with_exe_name(feature_name, lumunosity),
+        }
     }
 
-    fn new_with_exe_name(feature_name: &str) -> Self {
+    fn new_with_feature_name(feature_name: &str, luminosity: Luminosity) -> Self {
+        let hash = Self::calculate_hash(feature_name, None);
+        Self::new_with_hash(hash, luminosity)
+    }
+
+    fn new_with_exe_name(feature_name: &str, luminosity: Luminosity) -> Self {
         let app_name = std::env::current_exe()
             .ok()
             .and_then(|path| {
@@ -95,7 +117,7 @@ impl PrototypeMaterial {
             });
 
         let hash = Self::calculate_hash(feature_name, app_name.as_deref());
-        Self::new_with_hash(hash)
+        Self::new_with_hash(hash, luminosity)
     }
 
     fn new_with_color(color: Color) -> Self {
@@ -111,9 +133,9 @@ impl PrototypeMaterial {
         hasher.finish()
     }
 
-    fn new_with_hash(hash: u64) -> Self {
+    fn new_with_hash(hash: u64, luminosity: Luminosity) -> Self {
         let rgb = RandomColor::new()
-            .luminosity(Luminosity::Bright)
+            .luminosity(luminosity)
             .seed(hash)
             .to_rgb_array();
 
@@ -208,6 +230,7 @@ pub struct PrototypeMaterialMeshBundle {
     pub mesh: Handle<Mesh>,
     /// Describe the feature that this prototype material is for, e.g. `floor` or `wall`. It is used to generate a random color that is the same every time the program is run.
     pub material: PrototypeMaterialType,
+    pub luminosity: PrototypeLuminosity,
     pub transform: Transform,
     pub global_transform: GlobalTransform,
     /// User indication of whether an entity is visible
@@ -261,7 +284,7 @@ impl bevy::ecs::bundle::DynamicBundle for PrototypeMaterialMeshBundle {
         func: &mut impl FnMut(bevy::ecs::component::StorageType, bevy::ecs::ptr::OwningPtr<'_>),
     ) {
         self.mesh.get_components(&mut *func);
-        PrototypeMaterial::new(self.material).get_components(&mut *func);
+        PrototypeMaterial::new_with_luminosity(self.material, self.luminosity.luminosity).get_components(&mut *func);
         self.transform.get_components(&mut *func);
         self.global_transform.get_components(&mut *func);
         self.visibility.get_components(&mut *func);
