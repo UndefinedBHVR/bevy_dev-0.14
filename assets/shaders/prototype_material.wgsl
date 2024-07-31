@@ -1,5 +1,5 @@
 #import bevy_pbr::{
-    mesh_functions::{get_model_matrix, mesh_position_local_to_clip, mesh_position_local_to_world, mesh_normal_local_to_world},
+    mesh_functions::{get_world_from_local, mesh_position_local_to_clip, mesh_position_local_to_world, mesh_normal_local_to_world},
     pbr_types::pbr_input_new,
     pbr_functions::{apply_pbr_lighting, calculate_view, prepare_world_normal},
     mesh_bindings::mesh,
