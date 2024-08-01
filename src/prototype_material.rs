@@ -77,7 +77,8 @@ impl Default for PrototypeLuminosity {
 }
 
 /// Component which includes [`PrototypeMaterialAsset`] to [`Entity`] in the next [`PostUpdate`].
-#[derive(Component, Debug, Clone, Copy)]
+#[derive(Component, Debug, Clone, Copy, Reflect)]
+#[reflect(Component)]
 pub struct PrototypeMaterial {
     color: Color,
 }
